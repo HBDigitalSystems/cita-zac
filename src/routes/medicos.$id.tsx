@@ -20,10 +20,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { getDoctor } from "@/lib/mock-data";
+import { getDoctor, type Doctor } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/medicos/$id")({
-  loader: ({ params }) => {
+  loader: ({ params }): { doctor: Doctor } => {
     const doctor = getDoctor(params.id);
     if (!doctor) throw notFound();
     return { doctor };

@@ -9,38 +9,64 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as MedicosRouteImport } from './routes/medicos'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MedicosIdRouteImport } from './routes/medicos.$id'
 
+const MedicosRoute = MedicosRouteImport.update({
+  id: '/medicos',
+  path: '/medicos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MedicosIdRoute = MedicosIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => MedicosRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/medicos': typeof MedicosRouteWithChildren
+  '/medicos/$id': typeof MedicosIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/medicos': typeof MedicosRouteWithChildren
+  '/medicos/$id': typeof MedicosIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/medicos': typeof MedicosRouteWithChildren
+  '/medicos/$id': typeof MedicosIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/medicos' | '/medicos/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/medicos' | '/medicos/$id'
+  id: '__root__' | '/' | '/medicos' | '/medicos/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  MedicosRoute: typeof MedicosRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/medicos': {
+      id: '/medicos'
+      path: '/medicos'
+      fullPath: '/medicos'
+      preLoaderRoute: typeof MedicosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +74,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/medicos/$id': {
+      id: '/medicos/$id'
+      path: '/$id'
+      fullPath: '/medicos/$id'
+      preLoaderRoute: typeof MedicosIdRouteImport
+      parentRoute: typeof MedicosRoute
+    }
   }
 }
 
+interface MedicosRouteChildren {
+  MedicosIdRoute: typeof MedicosIdRoute
+}
+
+const MedicosRouteChildren: MedicosRouteChildren = {
+  MedicosIdRoute: MedicosIdRoute,
+}
+
+const MedicosRouteWithChildren =
+  MedicosRoute._addFileChildren(MedicosRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  MedicosRoute: MedicosRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
