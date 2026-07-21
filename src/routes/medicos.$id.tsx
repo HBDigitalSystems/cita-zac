@@ -86,7 +86,7 @@ export const Route = createFileRoute("/medicos/$id")({
 });
 
 function DoctorProfile() {
-  const { doctor } = Route.useLoaderData();
+  const { doctor } = Route.useLoaderData() as { doctor: Doctor };
   const [selectedDay, setSelectedDay] = useState(0);
 
   const slotsDia = ["09:00", "09:30", "10:30", "11:00", "12:00", "16:30", "17:00", "18:30"];
