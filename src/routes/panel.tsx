@@ -56,6 +56,7 @@ function PanelLayout() {
   const links = [
     { to: "/panel/paciente", label: "Paciente", show: true },
     { to: "/panel/medico", label: "Médico", show: roles.includes("doctor") },
+    { to: "/panel/mensajes", label: "Mensajes", show: true },
     { to: "/panel/admin", label: "Administración", show: isAdmin(roles) },
   ].filter((link) => link.show);
 

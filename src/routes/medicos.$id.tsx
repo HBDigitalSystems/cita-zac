@@ -37,6 +37,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/store/auth";
 import { DoctorReviews } from "@/components/doctor-reviews";
+import { MessageDoctorButton } from "@/components/message-doctor-button";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { cn } from "@/lib/utils";
@@ -646,9 +647,11 @@ function DoctorProfile() {
                   >
                     <Phone className="h-3.5 w-3.5" /> Llamar
                   </a>
-                  <button className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border py-2 font-medium text-secondary hover:border-primary hover:text-primary">
-                    <MessageCircle className="h-3.5 w-3.5" /> WhatsApp
-                  </button>
+                  {/* Antes había aquí un botón de WhatsApp sin acción: no
+                      llevaba a ninguna parte. El chat interno sí existe, y
+                      además deja la conversación dentro del perímetro que
+                      protege el RLS en vez de en un teléfono personal. */}
+                  <MessageDoctorButton doctorId={doctor.id} />
                 </div>
 
                 {doctor.profile.cancellation_policy && (

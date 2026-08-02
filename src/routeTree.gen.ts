@@ -18,6 +18,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as PanelIndexRouteImport } from './routes/panel.index'
 import { Route as MedicosIndexRouteImport } from './routes/medicos.index'
 import { Route as PanelPacienteRouteImport } from './routes/panel.paciente'
+import { Route as PanelMensajesRouteImport } from './routes/panel.mensajes'
 import { Route as PanelMedicoRouteImport } from './routes/panel.medico'
 import { Route as PanelAdminRouteImport } from './routes/panel.admin'
 import { Route as OnboardingPacienteRouteImport } from './routes/onboarding.paciente'
@@ -69,6 +70,11 @@ const PanelPacienteRoute = PanelPacienteRouteImport.update({
   path: '/paciente',
   getParentRoute: () => PanelRoute,
 } as any)
+const PanelMensajesRoute = PanelMensajesRouteImport.update({
+  id: '/mensajes',
+  path: '/mensajes',
+  getParentRoute: () => PanelRoute,
+} as any)
 const PanelMedicoRoute = PanelMedicoRouteImport.update({
   id: '/medico',
   path: '/medico',
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/onboarding/paciente': typeof OnboardingPacienteRoute
   '/panel/admin': typeof PanelAdminRoute
   '/panel/medico': typeof PanelMedicoRoute
+  '/panel/mensajes': typeof PanelMensajesRoute
   '/panel/paciente': typeof PanelPacienteRoute
   '/medicos/': typeof MedicosIndexRoute
   '/panel/': typeof PanelIndexRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/onboarding/paciente': typeof OnboardingPacienteRoute
   '/panel/admin': typeof PanelAdminRoute
   '/panel/medico': typeof PanelMedicoRoute
+  '/panel/mensajes': typeof PanelMensajesRoute
   '/panel/paciente': typeof PanelPacienteRoute
   '/medicos': typeof MedicosIndexRoute
   '/panel': typeof PanelIndexRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/onboarding/paciente': typeof OnboardingPacienteRoute
   '/panel/admin': typeof PanelAdminRoute
   '/panel/medico': typeof PanelMedicoRoute
+  '/panel/mensajes': typeof PanelMensajesRoute
   '/panel/paciente': typeof PanelPacienteRoute
   '/medicos/': typeof MedicosIndexRoute
   '/panel/': typeof PanelIndexRoute
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
     | '/onboarding/paciente'
     | '/panel/admin'
     | '/panel/medico'
+    | '/panel/mensajes'
     | '/panel/paciente'
     | '/medicos/'
     | '/panel/'
@@ -172,6 +182,7 @@ export interface FileRouteTypes {
     | '/onboarding/paciente'
     | '/panel/admin'
     | '/panel/medico'
+    | '/panel/mensajes'
     | '/panel/paciente'
     | '/medicos'
     | '/panel'
@@ -188,6 +199,7 @@ export interface FileRouteTypes {
     | '/onboarding/paciente'
     | '/panel/admin'
     | '/panel/medico'
+    | '/panel/mensajes'
     | '/panel/paciente'
     | '/medicos/'
     | '/panel/'
@@ -271,6 +283,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PanelPacienteRouteImport
       parentRoute: typeof PanelRoute
     }
+    '/panel/mensajes': {
+      id: '/panel/mensajes'
+      path: '/mensajes'
+      fullPath: '/panel/mensajes'
+      preLoaderRoute: typeof PanelMensajesRouteImport
+      parentRoute: typeof PanelRoute
+    }
     '/panel/medico': {
       id: '/panel/medico'
       path: '/medico'
@@ -312,6 +331,7 @@ declare module '@tanstack/react-router' {
 interface PanelRouteChildren {
   PanelAdminRoute: typeof PanelAdminRoute
   PanelMedicoRoute: typeof PanelMedicoRoute
+  PanelMensajesRoute: typeof PanelMensajesRoute
   PanelPacienteRoute: typeof PanelPacienteRoute
   PanelIndexRoute: typeof PanelIndexRoute
 }
@@ -319,6 +339,7 @@ interface PanelRouteChildren {
 const PanelRouteChildren: PanelRouteChildren = {
   PanelAdminRoute: PanelAdminRoute,
   PanelMedicoRoute: PanelMedicoRoute,
+  PanelMensajesRoute: PanelMensajesRoute,
   PanelPacienteRoute: PanelPacienteRoute,
   PanelIndexRoute: PanelIndexRoute,
 }

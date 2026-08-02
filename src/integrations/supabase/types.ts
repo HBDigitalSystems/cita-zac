@@ -2338,6 +2338,12 @@ export type Database = {
         }
         Returns: number
       }
+      mark_conversation_read: {
+        Args: {
+          p_conversation_id: string
+        }
+        Returns: string
+      }
       notify: {
         Args: {
           p_user_id: string
@@ -2346,6 +2352,12 @@ export type Database = {
           p_body?: string
           p_action_url?: string
           p_payload?: Json
+        }
+        Returns: string
+      }
+      open_conversation: {
+        Args: {
+          p_doctor_id: string
         }
         Returns: string
       }

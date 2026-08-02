@@ -609,6 +609,95 @@ await check('Marcar todas como leídas solo afecta a las propias', async () => {
   assert(propias.rows[0].n === 0, `Quedaron ${propias.rows[0].n} sin leer`)
 })
 
+// ============================================================== MENSAJERÍA ==
+console.log('\nIntegridad del chat')
+
+const conv2 = (await sys(
+  `insert into public.conversations (patient_id, doctor_id) values ($1, $2) returning id`,
+  [pB, d1])).rows[0].id
+
+const msgMedico = (await as(medico1,
+  `insert into public.messages (conversation_id, sender_id, body)
+   values ($1, $2, 'Suspenda el medicamento y nos vemos el martes.') returning id`,
+  [conv2, medico1])).rows[0].id
+
+await check('El paciente NO puede reescribir lo que dijo el médico', async () => {
+  await expectRejected(
+    as(pacienteB,
+      `update public.messages set body = 'Siga tomando el medicamento.' where id = $1`,
+      [msgMedico]),
+    'no se puede modificar'
+  )
+})
+
+await check('Ni siquiera el autor puede editar su mensaje ya enviado', async () => {
+  await expectRejected(
+    as(medico1, `update public.messages set body = 'Otra cosa' where id = $1`, [msgMedico]),
+    'no se puede modificar'
+  )
+})
+
+await check('El remitente NO puede sellar su propio mensaje como leído', async () => {
+  await expectRejected(
+    as(medico1, `update public.messages set read_at = now() where id = $1`, [msgMedico]),
+    'quien recibe'
+  )
+})
+
+await check('Quien recibe SÍ marca el mensaje como leído', async () => {
+  await as(pacienteB, `select public.mark_conversation_read($1)`, [conv2])
+  const r = await sys(`select read_at from public.messages where id = $1`, [msgMedico])
+  assert(r.rows[0].read_at !== null, 'No se selló el acuse de lectura')
+})
+
+await check('Al abrir el hilo se pone a cero el propio contador, no el ajeno', async () => {
+  const r = await sys(
+    `select patient_unread_count, doctor_unread_count from public.conversations where id = $1`,
+    [conv2])
+  assert(r.rows[0].patient_unread_count === 0, 'El paciente sigue con no leídos')
+  // El médico escribió, así que su propio contador nunca subió; lo que importa
+  // es que la lectura del paciente no lo haya tocado.
+  assert(r.rows[0].doctor_unread_count === 0, 'Se alteró el contador del médico')
+})
+
+await check('Un participante NO puede ocultar sus mensajes bajando los no leídos del otro', async () => {
+  await as(pacienteB,
+    `insert into public.messages (conversation_id, sender_id, body)
+     values ($1, $2, 'De acuerdo, doctora.')`, [conv2, pacienteB])
+
+  await expectRejected(
+    as(pacienteB, `update public.conversations set doctor_unread_count = 0 where id = $1`, [conv2]),
+    'la otra persona'
+  )
+
+  const r = await sys(`select doctor_unread_count from public.conversations where id = $1`, [conv2])
+  assert(r.rows[0].doctor_unread_count === 1, `El médico ve ${r.rows[0].doctor_unread_count} sin leer`)
+})
+
+await check('Nadie puede falsear la vista previa del último mensaje', async () => {
+  await expectRejected(
+    as(pacienteB,
+      `update public.conversations set last_message_preview = 'Le autorizo el alta' where id = $1`,
+      [conv2]),
+    'lo mantiene la base de datos'
+  )
+})
+
+await check('Un tercero NO ve la conversación ajena', async () => {
+  const r = await as(pacienteA, `select id from public.conversations where id = $1`, [conv2])
+  assert(r.rows.length === 0, 'Una paciente ajena lee el hilo')
+  const m = await as(pacienteA, `select id from public.messages where conversation_id = $1`, [conv2])
+  assert(m.rows.length === 0, 'Una paciente ajena lee los mensajes')
+})
+
+await check('open_conversation devuelve el hilo existente en vez de duplicarlo', async () => {
+  const primera = await as(pacienteB, `select public.open_conversation($1) as id`, [d1])
+  assert(primera.rows[0].id === conv2, 'Creó un hilo nuevo teniendo uno abierto')
+
+  const segunda = await as(pacienteB, `select public.open_conversation($1) as id`, [d1])
+  assert(segunda.rows[0].id === conv2, 'La segunda llamada no fue idempotente')
+})
+
 // ============================================================= AUDITORÍA ====
 console.log('\nAuditoría y catálogos')
 

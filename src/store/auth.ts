@@ -206,6 +206,17 @@ export function isAdmin(roles: string[]): boolean {
   return highestRoleLevel(roles) <= 30;
 }
 
+/**
+ * Si esta persona actúa como médico.
+ *
+ * Se pregunta por el rol concreto y no por el nivel: un administrador tiene más
+ * privilegios que un médico, pero no tiene agenda ni pacientes, así que en la
+ * mensajería no está del lado del médico.
+ */
+export function isDoctor(roles: string[]): boolean {
+  return roles.includes("doctor");
+}
+
 /** A dónde mandar a alguien nada más iniciar sesión, según su rol. */
 export function panelPathForRoles(roles: string[]): string {
   if (isAdmin(roles)) return "/panel/admin";
