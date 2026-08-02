@@ -12,4 +12,20 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+
+  nitro: {
+    // Destino de despliegue: Vercel.
+    //
+    // Por defecto este preset es `cloudflare-module`, así que el build local
+    // generaba `wrangler.json` y `.wrangler/` — artefactos de Cloudflare
+    // Workers que en Vercel no sirven de nada. Nitro detecta Vercel solo cuando
+    // el build corre allí, pero eso significaba no poder comprobar en local que
+    // la salida es la correcta hasta después de desplegar.
+    //
+    // Se respeta NITRO_PRESET por si hace falta construir para otro destino sin
+    // tocar este archivo. Dentro de un build de Lovable esto se ignora: su
+    // entorno fuerza Cloudflare para su propia vista previa, lo cual es
+    // independiente de tu producción en Vercel.
+    preset: process.env.NITRO_PRESET ?? "vercel",
+  },
 });

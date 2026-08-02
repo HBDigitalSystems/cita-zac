@@ -9,13 +9,44 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as MedicosRouteImport } from './routes/medicos'
+import { Route as RegistroRouteImport } from './routes/registro'
+import { Route as RecuperarRouteImport } from './routes/recuperar'
+import { Route as PanelRouteImport } from './routes/panel'
+import { Route as NuevaContrasenaRouteImport } from './routes/nueva-contrasena'
+import { Route as EntrarRouteImport } from './routes/entrar'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PanelIndexRouteImport } from './routes/panel.index'
+import { Route as MedicosIndexRouteImport } from './routes/medicos.index'
+import { Route as PanelPacienteRouteImport } from './routes/panel.paciente'
+import { Route as PanelMedicoRouteImport } from './routes/panel.medico'
+import { Route as PanelAdminRouteImport } from './routes/panel.admin'
+import { Route as OnboardingPacienteRouteImport } from './routes/onboarding.paciente'
+import { Route as OnboardingMedicoRouteImport } from './routes/onboarding.medico'
 import { Route as MedicosIdRouteImport } from './routes/medicos.$id'
 
-const MedicosRoute = MedicosRouteImport.update({
-  id: '/medicos',
-  path: '/medicos',
+const RegistroRoute = RegistroRouteImport.update({
+  id: '/registro',
+  path: '/registro',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecuperarRoute = RecuperarRouteImport.update({
+  id: '/recuperar',
+  path: '/recuperar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PanelRoute = PanelRouteImport.update({
+  id: '/panel',
+  path: '/panel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NuevaContrasenaRoute = NuevaContrasenaRouteImport.update({
+  id: '/nueva-contrasena',
+  path: '/nueva-contrasena',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EntrarRoute = EntrarRouteImport.update({
+  id: '/entrar',
+  path: '/entrar',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -23,48 +54,193 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PanelIndexRoute = PanelIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PanelRoute,
+} as any)
+const MedicosIndexRoute = MedicosIndexRouteImport.update({
+  id: '/medicos/',
+  path: '/medicos/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PanelPacienteRoute = PanelPacienteRouteImport.update({
+  id: '/paciente',
+  path: '/paciente',
+  getParentRoute: () => PanelRoute,
+} as any)
+const PanelMedicoRoute = PanelMedicoRouteImport.update({
+  id: '/medico',
+  path: '/medico',
+  getParentRoute: () => PanelRoute,
+} as any)
+const PanelAdminRoute = PanelAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => PanelRoute,
+} as any)
+const OnboardingPacienteRoute = OnboardingPacienteRouteImport.update({
+  id: '/onboarding/paciente',
+  path: '/onboarding/paciente',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingMedicoRoute = OnboardingMedicoRouteImport.update({
+  id: '/onboarding/medico',
+  path: '/onboarding/medico',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MedicosIdRoute = MedicosIdRouteImport.update({
-  id: '/$id',
-  path: '/$id',
-  getParentRoute: () => MedicosRoute,
+  id: '/medicos/$id',
+  path: '/medicos/$id',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/medicos': typeof MedicosRouteWithChildren
+  '/entrar': typeof EntrarRoute
+  '/nueva-contrasena': typeof NuevaContrasenaRoute
+  '/panel': typeof PanelRouteWithChildren
+  '/recuperar': typeof RecuperarRoute
+  '/registro': typeof RegistroRoute
   '/medicos/$id': typeof MedicosIdRoute
+  '/onboarding/medico': typeof OnboardingMedicoRoute
+  '/onboarding/paciente': typeof OnboardingPacienteRoute
+  '/panel/admin': typeof PanelAdminRoute
+  '/panel/medico': typeof PanelMedicoRoute
+  '/panel/paciente': typeof PanelPacienteRoute
+  '/medicos/': typeof MedicosIndexRoute
+  '/panel/': typeof PanelIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/medicos': typeof MedicosRouteWithChildren
+  '/entrar': typeof EntrarRoute
+  '/nueva-contrasena': typeof NuevaContrasenaRoute
+  '/recuperar': typeof RecuperarRoute
+  '/registro': typeof RegistroRoute
   '/medicos/$id': typeof MedicosIdRoute
+  '/onboarding/medico': typeof OnboardingMedicoRoute
+  '/onboarding/paciente': typeof OnboardingPacienteRoute
+  '/panel/admin': typeof PanelAdminRoute
+  '/panel/medico': typeof PanelMedicoRoute
+  '/panel/paciente': typeof PanelPacienteRoute
+  '/medicos': typeof MedicosIndexRoute
+  '/panel': typeof PanelIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/medicos': typeof MedicosRouteWithChildren
+  '/entrar': typeof EntrarRoute
+  '/nueva-contrasena': typeof NuevaContrasenaRoute
+  '/panel': typeof PanelRouteWithChildren
+  '/recuperar': typeof RecuperarRoute
+  '/registro': typeof RegistroRoute
   '/medicos/$id': typeof MedicosIdRoute
+  '/onboarding/medico': typeof OnboardingMedicoRoute
+  '/onboarding/paciente': typeof OnboardingPacienteRoute
+  '/panel/admin': typeof PanelAdminRoute
+  '/panel/medico': typeof PanelMedicoRoute
+  '/panel/paciente': typeof PanelPacienteRoute
+  '/medicos/': typeof MedicosIndexRoute
+  '/panel/': typeof PanelIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/medicos' | '/medicos/$id'
+  fullPaths:
+    | '/'
+    | '/entrar'
+    | '/nueva-contrasena'
+    | '/panel'
+    | '/recuperar'
+    | '/registro'
+    | '/medicos/$id'
+    | '/onboarding/medico'
+    | '/onboarding/paciente'
+    | '/panel/admin'
+    | '/panel/medico'
+    | '/panel/paciente'
+    | '/medicos/'
+    | '/panel/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/medicos' | '/medicos/$id'
-  id: '__root__' | '/' | '/medicos' | '/medicos/$id'
+  to:
+    | '/'
+    | '/entrar'
+    | '/nueva-contrasena'
+    | '/recuperar'
+    | '/registro'
+    | '/medicos/$id'
+    | '/onboarding/medico'
+    | '/onboarding/paciente'
+    | '/panel/admin'
+    | '/panel/medico'
+    | '/panel/paciente'
+    | '/medicos'
+    | '/panel'
+  id:
+    | '__root__'
+    | '/'
+    | '/entrar'
+    | '/nueva-contrasena'
+    | '/panel'
+    | '/recuperar'
+    | '/registro'
+    | '/medicos/$id'
+    | '/onboarding/medico'
+    | '/onboarding/paciente'
+    | '/panel/admin'
+    | '/panel/medico'
+    | '/panel/paciente'
+    | '/medicos/'
+    | '/panel/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  MedicosRoute: typeof MedicosRouteWithChildren
+  EntrarRoute: typeof EntrarRoute
+  NuevaContrasenaRoute: typeof NuevaContrasenaRoute
+  PanelRoute: typeof PanelRouteWithChildren
+  RecuperarRoute: typeof RecuperarRoute
+  RegistroRoute: typeof RegistroRoute
+  MedicosIdRoute: typeof MedicosIdRoute
+  OnboardingMedicoRoute: typeof OnboardingMedicoRoute
+  OnboardingPacienteRoute: typeof OnboardingPacienteRoute
+  MedicosIndexRoute: typeof MedicosIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/medicos': {
-      id: '/medicos'
-      path: '/medicos'
-      fullPath: '/medicos'
-      preLoaderRoute: typeof MedicosRouteImport
+    '/registro': {
+      id: '/registro'
+      path: '/registro'
+      fullPath: '/registro'
+      preLoaderRoute: typeof RegistroRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recuperar': {
+      id: '/recuperar'
+      path: '/recuperar'
+      fullPath: '/recuperar'
+      preLoaderRoute: typeof RecuperarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/panel': {
+      id: '/panel'
+      path: '/panel'
+      fullPath: '/panel'
+      preLoaderRoute: typeof PanelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nueva-contrasena': {
+      id: '/nueva-contrasena'
+      path: '/nueva-contrasena'
+      fullPath: '/nueva-contrasena'
+      preLoaderRoute: typeof NuevaContrasenaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/entrar': {
+      id: '/entrar'
+      path: '/entrar'
+      fullPath: '/entrar'
+      preLoaderRoute: typeof EntrarRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -74,31 +250,103 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/panel/': {
+      id: '/panel/'
+      path: '/'
+      fullPath: '/panel/'
+      preLoaderRoute: typeof PanelIndexRouteImport
+      parentRoute: typeof PanelRoute
+    }
+    '/medicos/': {
+      id: '/medicos/'
+      path: '/medicos'
+      fullPath: '/medicos/'
+      preLoaderRoute: typeof MedicosIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/panel/paciente': {
+      id: '/panel/paciente'
+      path: '/paciente'
+      fullPath: '/panel/paciente'
+      preLoaderRoute: typeof PanelPacienteRouteImport
+      parentRoute: typeof PanelRoute
+    }
+    '/panel/medico': {
+      id: '/panel/medico'
+      path: '/medico'
+      fullPath: '/panel/medico'
+      preLoaderRoute: typeof PanelMedicoRouteImport
+      parentRoute: typeof PanelRoute
+    }
+    '/panel/admin': {
+      id: '/panel/admin'
+      path: '/admin'
+      fullPath: '/panel/admin'
+      preLoaderRoute: typeof PanelAdminRouteImport
+      parentRoute: typeof PanelRoute
+    }
+    '/onboarding/paciente': {
+      id: '/onboarding/paciente'
+      path: '/onboarding/paciente'
+      fullPath: '/onboarding/paciente'
+      preLoaderRoute: typeof OnboardingPacienteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding/medico': {
+      id: '/onboarding/medico'
+      path: '/onboarding/medico'
+      fullPath: '/onboarding/medico'
+      preLoaderRoute: typeof OnboardingMedicoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/medicos/$id': {
       id: '/medicos/$id'
-      path: '/$id'
+      path: '/medicos/$id'
       fullPath: '/medicos/$id'
       preLoaderRoute: typeof MedicosIdRouteImport
-      parentRoute: typeof MedicosRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
 
-interface MedicosRouteChildren {
-  MedicosIdRoute: typeof MedicosIdRoute
+interface PanelRouteChildren {
+  PanelAdminRoute: typeof PanelAdminRoute
+  PanelMedicoRoute: typeof PanelMedicoRoute
+  PanelPacienteRoute: typeof PanelPacienteRoute
+  PanelIndexRoute: typeof PanelIndexRoute
 }
 
-const MedicosRouteChildren: MedicosRouteChildren = {
-  MedicosIdRoute: MedicosIdRoute,
+const PanelRouteChildren: PanelRouteChildren = {
+  PanelAdminRoute: PanelAdminRoute,
+  PanelMedicoRoute: PanelMedicoRoute,
+  PanelPacienteRoute: PanelPacienteRoute,
+  PanelIndexRoute: PanelIndexRoute,
 }
 
-const MedicosRouteWithChildren =
-  MedicosRoute._addFileChildren(MedicosRouteChildren)
+const PanelRouteWithChildren = PanelRoute._addFileChildren(PanelRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  MedicosRoute: MedicosRouteWithChildren,
+  EntrarRoute: EntrarRoute,
+  NuevaContrasenaRoute: NuevaContrasenaRoute,
+  PanelRoute: PanelRouteWithChildren,
+  RecuperarRoute: RecuperarRoute,
+  RegistroRoute: RegistroRoute,
+  MedicosIdRoute: MedicosIdRoute,
+  OnboardingMedicoRoute: OnboardingMedicoRoute,
+  OnboardingPacienteRoute: OnboardingPacienteRoute,
+  MedicosIndexRoute: MedicosIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

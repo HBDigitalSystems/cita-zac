@@ -20,6 +20,10 @@ dist-ssr
 .wrangler/
 .dev.vars
 
+# Vercel — salida del build (Build Output API) y config local del proyecto.
+# Sin esto se commitean megas de artefactos generados en cada build.
+.vercel
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
