@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Stethoscope, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth, panelPathForRoles } from "@/store/auth";
+import { NotificationBell } from "@/components/notification-bell";
 
 export function SiteHeader() {
   const { status, roles } = useAuth();
@@ -51,7 +52,9 @@ export function SiteHeader() {
           {status === "loading" ? (
             <div className="h-9 w-[13.5rem] sm:w-[19.5rem]" aria-hidden="true" />
           ) : status === "authenticated" ? (
-            <Button asChild size="sm" className="gap-2">
+            <>
+              <NotificationBell />
+              <Button asChild size="sm" className="gap-2">
               {/* Apunta a /panel, no al panel concreto: esa ruta reparte según
                   el rol una vez resuelto. Calcular el destino aquí lo dejaba
                   fijado con la lista de roles todavía vacía. */}
@@ -59,7 +62,8 @@ export function SiteHeader() {
                 <LayoutDashboard className="h-4 w-4" />
                 Mi panel
               </Link>
-            </Button>
+              </Button>
+            </>
           ) : (
             <>
               {/* Jerarquía deliberada: el paciente es quien más llega a esta

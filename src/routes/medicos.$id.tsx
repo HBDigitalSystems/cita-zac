@@ -36,6 +36,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/store/auth";
+import { DoctorReviews } from "@/components/doctor-reviews";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { cn } from "@/lib/utils";
@@ -514,69 +515,7 @@ function DoctorProfile() {
               </TabsContent>
 
               <TabsContent value="opiniones" className="mt-4 space-y-4">
-                <div className="rounded-2xl border border-border bg-card p-6">
-                  <div className="flex items-center gap-6">
-                    <div>
-                      <div className="text-4xl font-semibold text-secondary">
-                        {doctor.rating_average}
-                      </div>
-                      <div className="mt-1 flex items-center gap-0.5 text-amber-400">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star
-                            key={i}
-                            className={cn(
-                              "h-4 w-4",
-                              i < Math.round(doctor.rating_average) && "fill-current",
-                            )}
-                          />
-                        ))}
-                      </div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        {doctor.reviews_count} opiniones verificadas
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Provisional: las opiniones reales llegan en la Fase 8, ligadas
-                    a citas completadas. */}
-                {[
-                  {
-                    author: "Ana G.",
-                    when: "hace 2 semanas",
-                    comment:
-                      "Excelente atención, muy profesional y explica todo con paciencia. El consultorio es muy limpio y llegó puntual.",
-                  },
-                  {
-                    author: "Luis R.",
-                    when: "hace 1 mes",
-                    comment:
-                      "Muy recomendable. Diagnóstico acertado y seguimiento cercano por WhatsApp. La receta llegó por correo el mismo día.",
-                  },
-                  {
-                    author: "Marisol T.",
-                    when: "hace 2 meses",
-                    comment:
-                      "Trato humano, escucha con atención y no te apresura. Volvería sin dudarlo.",
-                  },
-                ].map((review) => (
-                  <div key={review.author} className="rounded-2xl border border-border bg-card p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="text-sm font-semibold text-secondary">{review.author}</div>
-                        <div className="text-xs text-muted-foreground">{review.when}</div>
-                      </div>
-                      <div className="flex items-center gap-0.5 text-amber-400">
-                        {Array.from({ length: 5 }).map((_, i) => (
-                          <Star key={i} className="h-3.5 w-3.5 fill-current" />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                      {review.comment}
-                    </p>
-                  </div>
-                ))}
+                <DoctorReviews doctorId={doctor.id} />
               </TabsContent>
             </Tabs>
           </div>

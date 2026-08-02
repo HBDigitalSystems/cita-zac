@@ -17,6 +17,7 @@ import { DoctorAgenda } from "@/components/doctor-agenda";
 import { supabase } from "@/integrations/supabase/client";
 import { getDoctorAppointments } from "@/services/appointments";
 import { useAuth } from "@/store/auth";
+import { DoctorReviewsPanel } from "@/components/doctor-reviews-panel";
 import type { Enums } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/panel/medico")({
@@ -209,6 +210,8 @@ function DoctorPanel() {
           <DoctorAgenda doctorId={doctor.id} />
         </div>
       )}
+
+      {doctor && <DoctorReviewsPanel doctorId={doctor.id} />}
 
       {doctor?.status === "verified" && !doctor.has_active_subscription && (
         <section className="mt-6 rounded-2xl border border-border bg-card p-6">

@@ -9,6 +9,7 @@ import { AppointmentCard, type AppointmentRow } from "@/components/appointment-c
 import { supabase } from "@/integrations/supabase/client";
 import { cancelAppointment, getPatientAppointments } from "@/services/appointments";
 import { useAuth } from "@/store/auth";
+import { PendingReviews } from "@/components/review-form";
 import { useShortlist } from "@/store/doctor-shortlist";
 import { useHydrated } from "@/hooks/use-hydrated";
 
@@ -171,6 +172,8 @@ function PatientPanel() {
           </div>
         )}
       </section>
+
+      {patient.data?.id && <PendingReviews patientId={patient.data.id} />}
 
       {past.length > 0 && (
         <section className="mt-8">

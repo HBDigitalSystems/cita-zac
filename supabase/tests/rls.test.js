@@ -49,17 +49,30 @@ const db = await PGlite.create({
 })
 
 await db.exec(STUBS)
+
+// Supabase concede estos permisos por defecto; PGlite no.
+//
+// Van ANTES de las migraciones y como privilegios por defecto, no como un
+// `grant on all` posterior. La diferencia importa: los privilegios por defecto
+// se aplican en el momento de crear cada objeto, así que un `revoke` escrito
+// dentro de una migración sobrevive. Un `grant on all` al final volvería a
+// conceder lo revocado y dejaría pasar pruebas de permisos que en Supabase
+// fallarían — o peor, ocultaría que una función SECURITY DEFINER quedó
+// expuesta como endpoint RPC.
+await db.exec(`
+  grant usage on schema public, extensions to anon, authenticated;
+  -- Supabase concede esto también. Hacía falta en cuanto una función
+  -- SECURITY INVOKER llama a auth.uid() por su cuenta: dentro de una SECURITY
+  -- DEFINER no se notaba, porque esa corre como propietario.
+  grant usage on schema auth to anon, authenticated;
+  alter default privileges in schema public grant select, insert, update, delete on tables to anon, authenticated;
+  alter default privileges in schema public grant usage, select on sequences to anon, authenticated;
+  alter default privileges in schema public grant execute on functions to anon, authenticated;
+`)
+
 for (const f of (await readdir(MIGRATIONS)).filter((f) => f.endsWith('.sql')).sort()) {
   await db.exec(await readFile(join(MIGRATIONS, f), 'utf8'))
 }
-
-// Supabase concede estos permisos por defecto; PGlite no.
-await db.exec(`
-  grant usage on schema public, extensions to anon, authenticated;
-  grant select, insert, update, delete on all tables in schema public to anon, authenticated;
-  grant usage, select on all sequences in schema public to anon, authenticated;
-  grant execute on all functions in schema public to anon, authenticated;
-`)
 
 // ---------------------------------------------------------------- utilidades
 let pass = 0, fail = 0
@@ -438,6 +451,162 @@ await check('El médico SÍ puede responder, y se sella la fecha', async () => {
 await check('Las reseñas publicadas son visibles para un anónimo', async () => {
   const r = await asAnon(`select rating from public.reviews`)
   assert(r.rows.length === 1, 'Un visitante no puede ver las reseñas publicadas')
+})
+
+// ===================================================== AUTORÍA DE RESEÑAS ===
+console.log('\nAutoría pública de las reseñas')
+
+await check('El anónimo lee la reseña CON el nombre reducido de quien la escribió', async () => {
+  const r = await asAnon(`select author_display_name from public.reviews`)
+  // El escenario crea a la paciente como first_name 'ana', last_name 'Prueba'.
+  assert(
+    r.rows[0].author_display_name === 'ana P.',
+    `Se esperaba "ana P." y llegó ${JSON.stringify(r.rows[0].author_display_name)}`
+  )
+})
+
+await check('El nombre reducido NO permite reconstruir el apellido completo', async () => {
+  const r = await asAnon(`select author_display_name from public.reviews`)
+  assert(
+    !r.rows[0].author_display_name.includes('Prueba'),
+    'El apellido completo viajó dentro del nombre mostrado'
+  )
+})
+
+await check('Marcar la reseña como anónima borra el nombre de la vista pública', async () => {
+  await as(pacienteA, `update public.reviews set is_anonymous = true where patient_id = $1`, [pA])
+  const r = await asAnon(`select author_display_name from public.reviews`)
+  assert(
+    r.rows[0].author_display_name === 'Paciente verificado',
+    `Quedó ${JSON.stringify(r.rows[0].author_display_name)}`
+  )
+  await as(pacienteA, `update public.reviews set is_anonymous = false where patient_id = $1`, [pA])
+})
+
+await check('El paciente NO puede firmar su reseña con un nombre inventado', async () => {
+  await expectRejected(
+    as(pacienteA, `update public.reviews set author_display_name = 'Dr. Sánchez' where patient_id = $1`, [pA]),
+    'calcula'
+  )
+})
+
+await check('El nombre de un paciente NO se puede consultar por RPC', async () => {
+  // `review_author_label` es SECURITY DEFINER y recibe un patient_id: si
+  // PostgREST la publicara, sería un buscador de nombres por identificador.
+  await expectRejected(
+    asAnon(`select public.review_author_label($1, false)`, [pB]),
+    'permission denied'
+  )
+})
+
+// ========================================================= NOTIFICACIONES ===
+console.log('\nNotificaciones')
+
+// 15:00 UTC son las 09:00 en America/Mexico_City, la zona de la plataforma.
+const cita2 = (await sys(
+  `insert into public.appointments
+     (patient_id, doctor_id, consulting_room_id, starts_at, ends_at, status, reason)
+   values ($1, $2, $3, '2026-09-10 15:00+00', '2026-09-10 15:30+00', 'pending', 'Control')
+   returning id`, [pA, d1, room1])).rows[0].id
+
+await check('Al agendar, el médico recibe el aviso', async () => {
+  const r = await as(medico1,
+    `select title, notification_type from public.notifications
+      where payload->>'appointment_id' = $1`, [cita2])
+  assert(r.rows.length === 1, `Se esperaba 1 aviso y hay ${r.rows.length}`)
+  assert(r.rows[0].notification_type === 'appointment_created', r.rows[0].notification_type)
+})
+
+await check('La hora del aviso es la local, no la UTC', async () => {
+  // Este es el error que ya se coló tres veces en la agenda: PostgREST corre
+  // con TimeZone = UTC, así que una cita de las 09:00 se anuncia a las 15:00
+  // salvo que se lea la zona de la plataforma explícitamente.
+  const r = await as(medico1,
+    `select body from public.notifications where payload->>'appointment_id' = $1`, [cita2])
+  const body = r.rows[0].body
+  assert(body.includes('09:00'), `El aviso dice: "${body}"`)
+  assert(!body.includes('15:00'), `El aviso usó la hora UTC: "${body}"`)
+  assert(body.includes('jueves 10 de septiembre'), `Fecha mal formada: "${body}"`)
+})
+
+await check('El paciente NO recibe el aviso dirigido al médico', async () => {
+  const r = await as(pacienteA,
+    `select id from public.notifications where payload->>'appointment_id' = $1`, [cita2])
+  assert(r.rows.length === 0, 'El paciente ve un aviso que no era suyo')
+})
+
+await check('Al confirmar, el aviso va al paciente', async () => {
+  await sys(`update public.appointments set status = 'confirmed' where id = $1`, [cita2])
+  const r = await as(pacienteA,
+    `select notification_type from public.notifications
+      where payload->>'appointment_id' = $1`, [cita2])
+  assert(r.rows.length === 1, `Se esperaba 1 aviso y hay ${r.rows.length}`)
+  assert(r.rows[0].notification_type === 'appointment_confirmed', r.rows[0].notification_type)
+})
+
+await check('Si cancela el médico, se avisa al paciente y no a quien canceló', async () => {
+  await sys(`update public.appointments set status = 'cancelled_by_doctor',
+             cancellation_reason = 'Urgencia hospitalaria' where id = $1`, [cita2])
+
+  const paciente = await as(pacienteA,
+    `select body from public.notifications
+      where payload->>'appointment_id' = $1 and notification_type = 'appointment_cancelled'`, [cita2])
+  assert(paciente.rows.length === 1, 'El paciente no fue avisado de la cancelación')
+  assert(paciente.rows[0].body.includes('Urgencia hospitalaria'), 'No se le dijo el motivo')
+
+  const medico = await as(medico1,
+    `select id from public.notifications
+      where payload->>'appointment_id' = $1 and notification_type = 'appointment_cancelled'`, [cita2])
+  assert(medico.rows.length === 0, 'Se avisó de la cancelación a quien la hizo')
+})
+
+await check('El aviso de un mensaje NO copia el contenido del mensaje', async () => {
+  const conv = (await sys(
+    `insert into public.conversations (patient_id, doctor_id) values ($1, $2) returning id`,
+    [pA, d1])).rows[0].id
+  await as(pacienteA,
+    `insert into public.messages (conversation_id, sender_id, body)
+     values ($1, $2, 'Sigo con dolor en el pecho por las noches')`, [conv, pacienteA])
+
+  const r = await as(medico1,
+    `select body from public.notifications where notification_type = 'message_received'`)
+  assert(r.rows.length === 1, 'El médico no fue avisado del mensaje')
+  assert(
+    !r.rows[0].body.includes('dolor'),
+    'El síntoma viajó a la notificación, fuera del perímetro que protege el RLS de messages'
+  )
+})
+
+await check('La reseña avisa al médico', async () => {
+  const r = await as(medico1,
+    `select notification_type from public.notifications where notification_type = 'review_received'`)
+  assert(r.rows.length === 1, 'El médico no fue avisado de la reseña')
+})
+
+await check('Nadie puede fabricar una notificación para otra persona', async () => {
+  await expectRejected(
+    as(pacienteB,
+      `insert into public.notifications (user_id, notification_type, title)
+       values ($1, 'system', 'Su médico canceló la cita')`, [pacienteA]),
+    'row-level security'
+  )
+})
+
+await check('Marcar todas como leídas solo afecta a las propias', async () => {
+  const antes = await as(medico1,
+    `select count(*)::int as n from public.notifications where read_at is null`)
+  await as(pacienteA, `select public.mark_all_notifications_read()`)
+
+  const despues = await as(medico1,
+    `select count(*)::int as n from public.notifications where read_at is null`)
+  assert(
+    despues.rows[0].n === antes.rows[0].n,
+    `Se marcaron avisos ajenos: ${antes.rows[0].n} -> ${despues.rows[0].n}`
+  )
+
+  const propias = await as(pacienteA,
+    `select count(*)::int as n from public.notifications where read_at is null`)
+  assert(propias.rows[0].n === 0, `Quedaron ${propias.rows[0].n} sin leer`)
 })
 
 // ============================================================= AUDITORÍA ====
