@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { Stethoscope, ShieldCheck, CalendarCheck, Star } from "lucide-react";
+import { ShieldCheck, CalendarCheck, Star } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 import type { ReactNode } from "react";
 
 /**
@@ -22,17 +23,9 @@ export function AuthShell({
     <div className="grid min-h-screen lg:grid-cols-[1fr_44%]">
       <div className="flex flex-col px-4 py-8 sm:px-8">
         <Link to="/" className="group inline-flex w-fit items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-soft transition-transform group-hover:scale-105">
-            <Stethoscope className="h-5 w-5" />
-          </div>
-          <div className="flex flex-col leading-tight">
-            <span className="text-base font-semibold tracking-tight text-secondary">
-              DoctorCita
-            </span>
-            <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-              Zacatecas
-            </span>
-          </div>
+          {/* Aquí hay sitio de sobra, así que el logotipo va más grande y se
+              lee la línea de abajo. */}
+          <BrandMark className="h-20 transition-transform group-hover:scale-105" />
         </Link>
 
         <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center py-10">

@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { Stethoscope, LayoutDashboard } from "lucide-react";
+import { LayoutDashboard } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 import { Button } from "@/components/ui/button";
 import { useAuth, panelPathForRoles } from "@/store/auth";
 import { NotificationBell } from "@/components/notification-bell";
@@ -11,9 +12,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 w-full border-b border-border/60 bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link to="/" className="group flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-soft transition-transform group-hover:scale-105">
-            <Stethoscope className="h-5 w-5" />
-          </div>
+          <BrandMark className="h-12 transition-transform group-hover:scale-105" />
           <div className="flex flex-col leading-tight">
             <span className="text-base font-semibold tracking-tight text-secondary">
               DoctorCita

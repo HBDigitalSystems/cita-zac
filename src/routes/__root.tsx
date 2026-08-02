@@ -93,13 +93,24 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { property: "og:locale", content: "es_MX" },
       { name: "twitter:card", content: "summary_large_image" },
+      // Tiñe la barra del navegador en Android y la barra de estado en iOS con
+      // el verde de la marca. Es el mismo tono del icono.
+      { name: "theme-color", content: "#2BB89A" },
+      { name: "apple-mobile-web-app-title", content: "DoctorCita" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      // El .ico se declara con su tamaño y NO como el primero: los navegadores
+      // modernos eligen el PNG, que es el icono real de la marca, y el .ico
+      // queda solo para lo que aún lo pide por convención.
+      { rel: "icon", href: "/icono.png", type: "image/png", sizes: "any" },
+      { rel: "icon", href: "/favicon.ico", sizes: "48x48" },
+      // iOS ignora el manifiesto para el icono de la pantalla de inicio.
+      { rel: "apple-touch-icon", href: "/icono.png" },
+      { rel: "manifest", href: "/site.webmanifest" },
     ],
   }),
   shellComponent: RootShell,

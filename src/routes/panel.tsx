@@ -1,6 +1,7 @@
 import { createFileRoute, Outlet, Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useEffect, useRef } from "react";
-import { Loader2, LogOut, Stethoscope, TriangleAlert } from "lucide-react";
+import { Loader2, LogOut, TriangleAlert } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -65,12 +66,15 @@ function PanelLayout() {
       <header className="sticky top-0 z-40 border-b border-border bg-background/85 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <Link to="/" className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-              <Stethoscope className="h-5 w-5" />
+            <BrandMark className="h-12" />
+            <div className="flex flex-col leading-tight">
+              <span className="text-base font-semibold tracking-tight text-secondary">
+                DoctorCita
+              </span>
+              <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+                Zacatecas
+              </span>
             </div>
-            <span className="text-base font-semibold tracking-tight text-secondary">
-              DoctorCita
-            </span>
           </Link>
 
           <nav className="hidden items-center gap-1 md:flex">

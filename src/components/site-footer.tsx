@@ -1,4 +1,4 @@
-import { Stethoscope } from "lucide-react";
+import { BrandMark } from "@/components/brand-mark";
 
 export function SiteFooter() {
   return (
@@ -6,14 +6,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
         <div className="grid gap-10 md:grid-cols-4">
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
-                <Stethoscope className="h-5 w-5" />
-              </div>
-              <span className="text-base font-semibold tracking-tight text-secondary">
-                DoctorCita
-              </span>
-            </div>
+            <BrandMark className="h-20" />
             <p className="mt-4 max-w-sm text-sm text-muted-foreground">
               La plataforma de salud de Zacatecas. Encuentra al especialista
               adecuado y agenda tu cita en minutos, con disponibilidad real y
