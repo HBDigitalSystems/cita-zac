@@ -5,8 +5,8 @@ import { panelPathForRoles, useAuth } from "@/store/auth";
 
 /**
  * `/panel` no muestra nada por sí solo: reparte según el rol. Existe para que
- * el resto de la aplicación (y el retorno de OAuth) puedan enviar a un destino
- * fijo sin conocer el rol de antemano.
+ * el resto de la aplicación pueda enviar a un destino fijo sin conocer el rol
+ * de antemano.
  */
 export const Route = createFileRoute("/panel/")({
   component: PanelRedirect,

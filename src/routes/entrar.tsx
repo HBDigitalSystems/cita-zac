@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AuthShell } from "@/components/auth-shell";
-import { OAuthButtons } from "@/components/oauth-buttons";
 import { supabase } from "@/integrations/supabase/client";
 import { loginSchema, translateAuthError, type LoginValues } from "@/lib/auth-schemas";
 import { panelPathForRoles, setRememberMe, useAuth } from "@/store/auth";
@@ -80,15 +79,6 @@ function LoginPage() {
         </>
       }
     >
-      <OAuthButtons redirectTo={redirect} />
-
-      <div className="my-6 flex items-center gap-3">
-        <span className="h-px flex-1 bg-border" />
-        <span className="text-xs uppercase tracking-wider text-muted-foreground">
-          o con tu correo
-        </span>
-        <span className="h-px flex-1 bg-border" />
-      </div>
 
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
         {formError && (

@@ -101,12 +101,6 @@ export function translateAuthError(message: string | undefined): string {
   if (normalized.includes("password should be at least")) {
     return "La contraseña es demasiado corta.";
   }
-  if (
-    normalized.includes("provider is not enabled") ||
-    normalized.includes("unsupported provider")
-  ) {
-    return "Ese método de acceso aún no está habilitado en la plataforma.";
-  }
   if (normalized.includes("failed to fetch") || normalized.includes("networkerror")) {
     return "No hay conexión con el servidor. Revisa tu internet e inténtalo otra vez.";
   }

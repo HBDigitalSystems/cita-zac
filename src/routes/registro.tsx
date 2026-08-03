@@ -9,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AuthShell } from "@/components/auth-shell";
-import { OAuthButtons } from "@/components/oauth-buttons";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { signupSchema, translateAuthError, type SignupValues } from "@/lib/auth-schemas";
@@ -185,15 +184,6 @@ function SignupPage() {
         </p>
       )}
 
-      <OAuthButtons />
-
-      <div className="my-6 flex items-center gap-3">
-        <span className="h-px flex-1 bg-border" />
-        <span className="text-xs uppercase tracking-wider text-muted-foreground">
-          o con tu correo
-        </span>
-        <span className="h-px flex-1 bg-border" />
-      </div>
 
       <form onSubmit={onSubmit} className="space-y-4" noValidate>
         {formError && (
