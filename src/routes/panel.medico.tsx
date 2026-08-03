@@ -18,6 +18,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getDoctorAppointments } from "@/services/appointments";
 import { useAuth } from "@/store/auth";
 import { DoctorReviewsPanel } from "@/components/doctor-reviews-panel";
+import { PhotoUpload } from "@/components/photo-upload";
 import type { Enums } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/panel/medico")({
@@ -108,6 +109,22 @@ function DoctorPanel() {
   const citas = useQuery({
     queryKey: ["doctor-appointments", doctor?.id],
     queryFn: () => getDoctorAppointments(doctor!.id),
+    enabled: Boolean(doctor?.id),
+  });
+
+  // El perfil público vive en su propia tabla y hasta ahora el panel nunca lo
+  // consultaba: por eso el médico no veía su propia foto.
+  const perfil = useQuery({
+    queryKey: ["doctor-profile", doctor?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("doctor_profiles")
+        .select("display_name, headline, photo_url")
+        .eq("doctor_id", doctor!.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
     enabled: Boolean(doctor?.id),
   });
 
@@ -204,6 +221,39 @@ function DoctorPanel() {
           </div>
         ))}
       </div>
+
+      {doctor && user && (
+        <section className="mt-8 rounded-2xl border border-border bg-card p-6">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-lg font-semibold text-secondary">Tu perfil público</h2>
+            {doctor.slug && isPublic && (
+              <Link
+                to="/medicos/$id"
+                params={{ id: doctor.slug }}
+                className="text-sm text-primary hover:underline"
+              >
+                Ver cómo lo ven los pacientes →
+              </Link>
+            )}
+          </div>
+
+          <div className="mt-5">
+            <PhotoUpload
+              doctorId={doctor.id}
+              userId={user.id}
+              fotoActual={perfil.data?.photo_url ?? null}
+              onSubida={() => void perfil.refetch()}
+            />
+          </div>
+
+          {!perfil.data?.photo_url && (
+            <p className="mt-4 rounded-xl bg-primary-soft/40 px-4 py-3 text-sm text-secondary">
+              Los perfiles con foto reciben bastantes más solicitudes de cita. Puedes subirla
+              desde el teléfono o desde la computadora.
+            </p>
+          )}
+        </section>
+      )}
 
       {doctor && (
         <div className="mt-8">
