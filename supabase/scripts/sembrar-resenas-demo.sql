@@ -47,8 +47,12 @@ select
   (select id from paciente),
   m.id,
   (select cr.id from public.consulting_rooms cr where cr.doctor_id = m.id order by cr.is_primary desc limit 1),
-  (now() - (m.n * 9 || ' days')::interval)::date + time '10:00',
-  (now() - (m.n * 9 || ' days')::interval)::date + time '10:30',
+  -- `::date + time` produce un timestamp SIN zona, y al guardarlo en una
+  -- columna con zona PostgreSQL lo toma por UTC: las 10:00 acababan siendo las
+  -- 04:00 en Zacatecas, una hora a la que ningún consultorio abre. El
+  -- `at time zone` fija que esas 10:00 son hora local.
+  ((now() - (m.n * 9 || ' days')::interval)::date + time '10:00') at time zone 'America/Mexico_City',
+  ((now() - (m.n * 9 || ' days')::interval)::date + time '10:30') at time zone 'America/Mexico_City',
   'completed',
   'in_person',
   'Consulta de control',
