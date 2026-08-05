@@ -31,6 +31,7 @@ import {
 } from "@/services/admin";
 import { isAdmin, useAuth } from "@/store/auth";
 import { ExpensesPanel } from "@/components/expenses-panel";
+import { AuditLogPanel } from "@/components/audit-log-panel";
 
 export const Route = createFileRoute("/panel/admin")({
   head: () => ({ meta: [{ title: "Administración · DoctorCita" }] }),
@@ -165,9 +166,10 @@ function AdminPanel() {
 
       {user && <ExpensesPanel userId={user.id} />}
 
-      <div className="mt-8 grid gap-4 md:grid-cols-2">
-        <ComingSoon title="Gestión de usuarios y catálogos" phase="Fase 7 ampliada" />
-        <ComingSoon title="Reportes y bitácora de auditoría" phase="Fase 7 ampliada" />
+      <AuditLogPanel />
+
+      <div className="mt-8">
+        <ComingSoon title="Gestión de usuarios y catálogos" phase="Fase 11" />
       </div>
     </>
   );

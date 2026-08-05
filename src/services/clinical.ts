@@ -74,6 +74,44 @@ export async function getDocumentosDePaciente(patientId: string): Promise<Docume
   return (data ?? []) as DocumentoClinico[];
 }
 
+export type NotaConMedico = NotaClinica & {
+  medico_nombre: string;
+  medico_slug: string | null;
+  especialidad: string | null;
+};
+
+/**
+ * Las notas clínicas del propio paciente, de TODOS sus médicos.
+ *
+ * Asimetría deliberada con `getNotasDePaciente`: el paciente ve su expediente
+ * entero —es suyo— mientras que cada médico solo ve lo que él escribió. Lo
+ * decide el RLS, no esta consulta.
+ *
+ * El nombre del médico se toma de `doctor_profiles`, que es público, y no de
+ * `public.users`, que está cerrado a la propia fila y devolvería nulos.
+ */
+export async function getMisNotas(patientId: string): Promise<NotaConMedico[]> {
+  const { data, error } = await supabase
+    .from("medical_records")
+    .select(
+      `id, appointment_id, chief_complaint, history, physical_exam,
+       diagnosis, treatment_plan, notes, follow_up_date, vitals, created_at,
+       doctors ( slug, doctor_profiles ( display_name ),
+                 specialties!doctors_primary_specialty_id_fkey ( name ) )`,
+    )
+    .eq("patient_id", patientId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  return (data ?? []).map((n: any) => ({
+    ...n,
+    medico_nombre: n.doctors?.doctor_profiles?.display_name ?? "Tu médico",
+    medico_slug: n.doctors?.slug ?? null,
+    especialidad: n.doctors?.specialties?.name ?? null,
+  })) as NotaConMedico[];
+}
+
 /** Guarda la nota de una consulta. */
 export async function guardarNota(input: {
   patientId: string;

@@ -19,6 +19,7 @@ import { getDoctorAppointments } from "@/services/appointments";
 import { useAuth } from "@/store/auth";
 import { DoctorReviewsPanel } from "@/components/doctor-reviews-panel";
 import { PhotoUpload } from "@/components/photo-upload";
+import { DoctorServicesPanel, DoctorSocialPanel } from "@/components/doctor-services-panel";
 import type { Enums } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/panel/medico")({
@@ -119,7 +120,7 @@ function DoctorPanel() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("doctor_profiles")
-        .select("display_name, headline, photo_url")
+        .select("display_name, headline, photo_url, facebook_url, instagram_url")
         .eq("doctor_id", doctor!.id)
         .maybeSingle();
       if (error) throw error;
@@ -276,9 +277,18 @@ function DoctorPanel() {
         </section>
       )}
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
-        <ComingSoon title="Galería, servicios y certificaciones" phase="Fase 4 ampliada" />
-        <ComingSoon title="Agenda y calendario en tiempo real" phase="Fase 6" />
+      {doctor && <DoctorServicesPanel doctorId={doctor.id} />}
+
+      {doctor && (
+        <DoctorSocialPanel
+          doctorId={doctor.id}
+          facebookUrl={perfil.data?.facebook_url ?? null}
+          instagramUrl={perfil.data?.instagram_url ?? null}
+        />
+      )}
+
+      <div className="mt-6">
+        <ComingSoon title="Galería de fotos y certificaciones" phase="Fase 9" />
       </div>
     </>
   );

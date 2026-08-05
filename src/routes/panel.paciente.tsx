@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cancelAppointment, getPatientAppointments } from "@/services/appointments";
 import { useAuth } from "@/store/auth";
 import { PendingReviews } from "@/components/review-form";
+import { PatientOwnRecord } from "@/components/patient-own-record";
 import { useShortlist } from "@/store/doctor-shortlist";
 import { useHydrated } from "@/hooks/use-hydrated";
 
@@ -131,7 +132,7 @@ function PatientPanel() {
               ? "—"
               : String(past.filter((a) => a.status === "completed").length)
           }
-          hint="Tu historial, en la Fase 7"
+          hint="Tu historial está más abajo"
         />
       </div>
 
@@ -186,8 +187,12 @@ function PatientPanel() {
         </section>
       )}
 
+      {patient.data?.id && user && (
+        <PatientOwnRecord patientId={patient.data.id} userId={user.id} />
+      )}
+
       <div className="mt-8">
-        <ComingSoon title="Expediente clínico, recetas y facturas" phase="Fase 7" />
+        <ComingSoon title="Recetas digitales y facturación" phase="Fase 9" />
       </div>
     </>
   );

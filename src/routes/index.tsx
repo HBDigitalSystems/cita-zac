@@ -507,19 +507,29 @@ function ParaMedicos() {
               automatizada y herramientas clínicas modernas en un solo lugar.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
+              {/* Los dos botones que había aquí no tenían ni enlace ni acción:
+                  pulsarlos no hacía nada, y son la principal llamada a la
+                  acción para los médicos que llegan a la portada. */}
               <Button
+                asChild
                 size="lg"
                 variant="secondary"
                 className="bg-white text-secondary hover:bg-white/90"
               >
-                Registrar mi consultorio
+                <Link to="/registro" search={{ rol: "doctor" }}>
+                  Registrar mi consultorio
+                </Link>
               </Button>
+              {/* "Ver planes" se retira en lugar de dejarlo mudo: la
+                  contratación de suscripciones es la Fase 9 y todavía no hay
+                  ninguna página de precios a la que llevar. */}
               <Button
+                asChild
                 size="lg"
                 variant="outline"
                 className="border-white/30 bg-transparent text-white hover:bg-white/10 hover:text-white"
               >
-                Ver planes
+                <Link to="/medicos">Ver médicos ya publicados</Link>
               </Button>
             </div>
           </div>
