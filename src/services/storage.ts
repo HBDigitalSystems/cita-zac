@@ -20,8 +20,16 @@
 
 import { supabase } from "@/integrations/supabase/client";
 
-/** Lado máximo de la imagen ya procesada. */
+/** Lado máximo de una foto de perfil. Se muestra a 400 px como mucho. */
 const LADO_MAXIMO = 800;
+
+/**
+ * Lado máximo de una foto de galería.
+ *
+ * Mayor que el de perfil porque estas se ven en grande al abrirlas: una foto
+ * del consultorio reducida a 800 px se ve borrosa a pantalla completa.
+ */
+const LADO_MAXIMO_GALERIA = 1600;
 
 export type ImagenProcesada = { blob: Blob; extension: string; tipo: string };
 
@@ -32,7 +40,10 @@ export type ImagenProcesada = { blob: Blob; extension: string; tipo: string };
  * navegadores desde 2021; si `toBlob` no lo produce —Safari antiguo—, se cae a
  * JPEG, que el bucket también acepta.
  */
-export async function procesarImagen(archivo: File): Promise<ImagenProcesada> {
+export async function procesarImagen(
+  archivo: File,
+  ladoMaximo = LADO_MAXIMO,
+): Promise<ImagenProcesada> {
   const url = URL.createObjectURL(archivo);
 
   try {
@@ -43,7 +54,7 @@ export async function procesarImagen(archivo: File): Promise<ImagenProcesada> {
       el.src = url;
     });
 
-    const escala = Math.min(1, LADO_MAXIMO / Math.max(img.width, img.height));
+    const escala = Math.min(1, ladoMaximo / Math.max(img.width, img.height));
     const ancho = Math.round(img.width * escala);
     const alto = Math.round(img.height * escala);
 
@@ -104,6 +115,34 @@ export async function subirAvatar(archivo: File, userId: string): Promise<Subida
     return { ok: true, url: data.publicUrl };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "No pudimos subir la imagen." };
+  }
+}
+
+/**
+ * Sube una foto a la galería del médico.
+ *
+ * Va al bucket `doctor-media`, que es público: estas fotos se enseñan en el
+ * perfil a cualquier visitante, así que no tiene sentido firmarlas. La ruta
+ * empieza por el id del usuario porque es lo que exige la policy de escritura.
+ */
+export async function subirFotoGaleria(
+  archivo: File,
+  userId: string,
+): Promise<SubidaResultado> {
+  try {
+    const { blob, extension, tipo } = await procesarImagen(archivo, LADO_MAXIMO_GALERIA);
+    const ruta = `${userId}/galeria-${Date.now()}.${extension}`;
+
+    const { error } = await supabase.storage
+      .from("doctor-media")
+      .upload(ruta, blob, { contentType: tipo });
+
+    if (error) return { ok: false, error: traducir(error.message) };
+
+    const { data } = supabase.storage.from("doctor-media").getPublicUrl(ruta);
+    return { ok: true, url: data.publicUrl };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "No pudimos subir la foto." };
   }
 }
 

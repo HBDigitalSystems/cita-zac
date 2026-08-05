@@ -7,6 +7,7 @@ import {
   Calendar,
   Clock,
   GraduationCap,
+  Images,
   Languages,
   ShieldCheck,
   CheckCircle2,
@@ -358,6 +359,32 @@ function DoctorProfile() {
               </TabsList>
 
               <TabsContent value="sobre" className="mt-4 space-y-6">
+                {doctor.media.length > 0 && (
+                  <section className="rounded-2xl border border-border bg-card p-6">
+                    <h2 className="flex items-center gap-2 text-base font-semibold text-secondary">
+                      <Images className="h-4 w-4 text-primary" />
+                      El consultorio
+                    </h2>
+                    <ul className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                      {doctor.media.map((m) => (
+                        <li key={m.id}>
+                          <a href={m.url} target="_blank" rel="noopener noreferrer">
+                            <img
+                              src={m.url}
+                              // Sin texto propio la foto no aporta nada a quien
+                              // usa lector de pantalla; el alt describe qué es.
+                              alt={m.caption ?? `Consultorio de ${name}`}
+                              loading="lazy"
+                              className="aspect-[4/3] w-full rounded-xl border border-border
+                                         object-cover transition-opacity hover:opacity-90"
+                            />
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                )}
+
                 <section className="rounded-2xl border border-border bg-card p-6">
                   <h2 className="text-base font-semibold text-secondary">Biografía</h2>
                   <p className="mt-3 text-sm leading-relaxed text-muted-foreground">

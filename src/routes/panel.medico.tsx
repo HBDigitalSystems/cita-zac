@@ -21,6 +21,7 @@ import { DoctorReviewsPanel } from "@/components/doctor-reviews-panel";
 import { PhotoUpload } from "@/components/photo-upload";
 import { DoctorServicesPanel, DoctorSocialPanel } from "@/components/doctor-services-panel";
 import { DoctorIncomePanel } from "@/components/doctor-income-panel";
+import { DoctorGalleryPanel } from "@/components/doctor-gallery-panel";
 import type { Enums } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/panel/medico")({
@@ -290,9 +291,7 @@ function DoctorPanel() {
         />
       )}
 
-      <div className="mt-6">
-        <ComingSoon title="Galería de fotos y certificaciones" phase="Fase 9" />
-      </div>
+      {doctor && user && <DoctorGalleryPanel doctorId={doctor.id} userId={user.id} />}
     </>
   );
 }

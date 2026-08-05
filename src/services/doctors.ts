@@ -63,6 +63,7 @@ export type DoctorDetail = DoctorSearchResult & {
   certifications: Array<
     Pick<Tables<"doctor_certifications">, "id" | "title" | "issuing_body" | "issued_year">
   >;
+  media: Array<Pick<Tables<"doctor_media">, "id" | "url" | "caption" | "media_type">>;
 };
 
 // Las relaciones se nombran por su clave foránea (`tabla!nombre_fkey`) siempre
@@ -87,7 +88,8 @@ const LIST_SELECT = `
 const DETAIL_SELECT = `
   ${LIST_SELECT},
   university, graduation_year,
-  doctor_certifications ( id, title, issuing_body, issued_year )
+  doctor_certifications ( id, title, issuing_body, issued_year ),
+  doctor_media ( id, url, caption, media_type )
 `;
 
 /**
@@ -293,6 +295,7 @@ export async function getDoctorBySlug(slug: string): Promise<DoctorDetail | null
     graduation_year: row.graduation_year ?? null,
     working_hours: hours ?? [],
     certifications: row.doctor_certifications ?? [],
+    media: row.doctor_media ?? [],
   };
 }
 
