@@ -2418,6 +2418,19 @@ export type Database = {
         }
         Returns: number
       }
+      doctor_income_summary: {
+        Args: {
+          p_desde?: string
+          p_hasta?: string
+        }
+        Returns: {
+        mes: string
+        consultas: number
+        total_cents: number
+        presencial_cents: number
+        video_cents: number
+      }[]
+      }
       doctor_is_public: {
         Args: {
           d: string

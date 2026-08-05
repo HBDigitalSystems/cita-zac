@@ -20,6 +20,7 @@ import { useAuth } from "@/store/auth";
 import { DoctorReviewsPanel } from "@/components/doctor-reviews-panel";
 import { PhotoUpload } from "@/components/photo-upload";
 import { DoctorServicesPanel, DoctorSocialPanel } from "@/components/doctor-services-panel";
+import { DoctorIncomePanel } from "@/components/doctor-income-panel";
 import type { Enums } from "@/integrations/supabase/types";
 
 export const Route = createFileRoute("/panel/medico")({
@@ -261,6 +262,8 @@ function DoctorPanel() {
           <DoctorAgenda doctorId={doctor.id} userId={user!.id} />
         </div>
       )}
+
+      {doctor && <DoctorIncomePanel />}
 
       {doctor && <DoctorReviewsPanel doctorId={doctor.id} />}
 

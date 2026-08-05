@@ -837,6 +837,51 @@ await check('Un médico solo lee SUS notas, no las de otro médico', async () =>
   )
 })
 
+// =============================================================== INGRESOS ===
+console.log('\nIngresos del médico')
+
+await sys(
+  `insert into public.appointments
+     (patient_id, doctor_id, consulting_room_id, starts_at, ends_at, status, modality,
+      price_cents, cancelled_at)
+   values ($1, $2, $3, '2026-05-12 16:00+00', '2026-05-12 16:30+00', 'completed', 'in_person', 120000, null),
+          ($1, $2, $3, '2026-05-20 17:00+00', '2026-05-20 17:30+00', 'completed', 'in_person',  80000, null),
+          ($1, $2, null, '2026-05-22 18:00+00', '2026-05-22 18:30+00', 'completed', 'video',    96000, null),
+          -- Cancelada CON su fecha: la tabla exige coherencia entre el estado y
+          -- el sello de cancelación.
+          ($1, $2, $3, '2026-05-25 19:00+00', '2026-05-25 19:30+00', 'cancelled_by_patient', 'in_person', 120000, now())`,
+  [pA, d1, room1])
+
+await check('Solo suman las citas atendidas', async () => {
+  const r = await as(medico1,
+    `select total_cents, consultas from public.doctor_income_summary('2026-05-01','2026-05-31')`)
+  assert(r.rows.length === 1, `Devolvió ${r.rows.length} meses`)
+  // 120000 + 80000 + 96000. La cancelada no cuenta aunque tenga precio.
+  assert(Number(r.rows[0].total_cents) === 296000, `total = ${r.rows[0].total_cents}`)
+  assert(Number(r.rows[0].consultas) === 3, `consultas = ${r.rows[0].consultas}`)
+})
+
+await check('Separa lo presencial de la videoconsulta', async () => {
+  const r = await as(medico1,
+    `select presencial_cents, video_cents from public.doctor_income_summary('2026-05-01','2026-05-31')`)
+  assert(Number(r.rows[0].presencial_cents) === 200000, `presencial = ${r.rows[0].presencial_cents}`)
+  assert(Number(r.rows[0].video_cents) === 96000, `video = ${r.rows[0].video_cents}`)
+})
+
+await check('Un médico NO ve los ingresos de otro', async () => {
+  const r = await as(medico2,
+    `select count(*)::int as n from public.doctor_income_summary('2026-05-01','2026-05-31')`)
+  assert(r.rows[0].n === 0, `Un médico ajeno ve ${r.rows[0].n} meses de ingresos`)
+})
+
+await check('Un paciente NO ve ingresos de nadie', async () => {
+  // La función es SECURITY INVOKER: suma solo sobre las filas que el RLS deja
+  // leer, y un paciente no lee las citas de un médico.
+  const r = await as(pacienteB,
+    `select count(*)::int as n from public.doctor_income_summary(null, null)`)
+  assert(r.rows[0].n === 0, `Un paciente ve ${r.rows[0].n} meses de ingresos`)
+})
+
 // ================================================== SECRETARIA / RECEPCIÓN ==
 console.log('\nSecretaria y recepcionista')
 
