@@ -2089,6 +2089,64 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_assignments: {
+        Row: {
+          id: string
+          staff_user_id: string
+          doctor_id: string
+          can_manage_agenda: boolean
+          can_message: boolean
+          can_register_expenses: boolean
+          is_active: boolean
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          staff_user_id: string
+          doctor_id: string
+          can_manage_agenda?: boolean
+          can_message?: boolean
+          can_register_expenses?: boolean
+          is_active?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          staff_user_id?: string
+          doctor_id?: string
+          can_manage_agenda?: boolean
+          can_message?: boolean
+          can_register_expenses?: boolean
+          is_active?: boolean
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_assignments_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_assignments_doctor_id_fkey"
+            columns: ["doctor_id"]
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_assignments_staff_user_id_fkey"
+            columns: ["staff_user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       subscriptions: {
         Row: {
           id: string
@@ -2485,6 +2543,32 @@ export type Database = {
           value: string
         }
         Returns: string
+      }
+      staff_agenda: {
+        Args: {
+          p_doctor_id: string
+          p_desde?: string
+          p_hasta?: string
+        }
+        Returns: {
+        id: string
+        reference: string
+        starts_at: string
+        ends_at: string
+        status: string
+        modality: string
+        reason: string
+        is_first_visit: boolean
+        paciente_nombre: string
+        paciente_telefono: string
+        consultorio: string
+      }[]
+      }
+      staff_doctor_ids: {
+        Args: {
+          p_permiso?: string
+        }
+        Returns: string[]
       }
       unaccent_immutable: {
         Args: {

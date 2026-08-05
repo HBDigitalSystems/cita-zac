@@ -837,6 +837,133 @@ await check('Un médico solo lee SUS notas, no las de otro médico', async () =>
   )
 })
 
+// ================================================== SECRETARIA / RECEPCIÓN ==
+console.log('\nSecretaria y recepcionista')
+
+const secre = (await sys(
+  `insert into auth.users (email, raw_user_meta_data)
+   values ('secre@test.mx', jsonb_build_object('role','patient','first_name','Secre','last_name','Prueba'))
+   returning id`)).rows[0].id
+
+await sys(
+  `insert into public.user_roles (user_id, role_id)
+   select $1, id from public.roles where key = 'secretary'`, [secre])
+
+await check('El rol por sí solo NO da acceso a nada', async () => {
+  // Antes de asignarla a ningún médico. Es la comprobación que demuestra que
+  // el permiso cuelga de la asignación y no del rol.
+  const r = await as(secre, `select id from public.appointments`)
+  assert(r.rows.length === 0, `Una secretaria sin asignar ve ${r.rows.length} citas`)
+})
+
+await check('Solo el médico o un admin pueden asignar personal', async () => {
+  await expectRejected(
+    as(secre,
+      `insert into public.staff_assignments (staff_user_id, doctor_id) values ($1, $2)`,
+      [secre, d1]),
+    'row-level security'
+  )
+})
+
+await sys(
+  `insert into public.staff_assignments
+     (staff_user_id, doctor_id, can_manage_agenda, can_message, can_register_expenses)
+   values ($1, $2, true, true, true)`, [secre, d1])
+
+await check('Ya asignada, ve la agenda de SU médico', async () => {
+  const r = await as(secre, `select id from public.appointments where doctor_id = $1`, [d1])
+  assert(r.rows.length > 0, 'No ve ninguna cita del médico al que está asignada')
+})
+
+await check('NO ve la agenda de otro médico', async () => {
+  // Por videollamada: el médico 2 no tiene consultorio dado de alta, y una
+  // cita presencial exige uno.
+  const otra = await sys(
+    `insert into public.appointments (patient_id, doctor_id, starts_at, ends_at, status, modality)
+     values ($1, $2, '2026-10-01 16:00+00', '2026-10-01 16:30+00', 'confirmed', 'video')
+     returning id`,
+    [pB, d2])
+  const r = await as(secre, `select id from public.appointments where id = $1`, [otra.rows[0].id])
+  assert(r.rows.length === 0, 'Ve la agenda de un médico para el que no trabaja')
+})
+
+await check('NO puede leer el expediente clínico', async () => {
+  const notas = await as(secre, `select id from public.medical_records`)
+  assert(notas.rows.length === 0, `Lee ${notas.rows.length} notas clínicas`)
+
+  const docs = await as(secre, `select id from public.documents`)
+  assert(docs.rows.length === 0, `Lee ${docs.rows.length} documentos`)
+})
+
+await check('NO puede leer alergias ni padecimientos por la tabla de pacientes', async () => {
+  // Este es el motivo de que la agenda del personal vaya por función: nombre y
+  // teléfono viven en las mismas tablas que las alergias, y el RLS decide qué
+  // filas se ven, no qué columnas.
+  const r = await as(secre, `select allergies, chronic_conditions from public.patients`)
+  assert(r.rows.length === 0, `Lee el expediente de ${r.rows.length} pacientes`)
+})
+
+await check('La función de agenda le da nombre y teléfono, y nada más', async () => {
+  const r = await as(secre, `select * from public.staff_agenda($1, null, null)`, [d1])
+  assert(r.rows.length > 0, 'La función no devuelve nada')
+
+  const columnas = Object.keys(r.rows[0])
+  const prohibidas = columnas.filter((c) =>
+    /allerg|chronic|diagnos|blood|birth|notes/i.test(c))
+  assert(prohibidas.length === 0, `Expone columnas clínicas: ${prohibidas.join(', ')}`)
+  assert(columnas.includes('paciente_nombre'), 'Falta el nombre del paciente')
+  assert(columnas.includes('paciente_telefono'), 'Falta el teléfono')
+})
+
+await check('La función NO devuelve la agenda de un médico ajeno', async () => {
+  // Pasarle otro id no sirve: la comprobación está dentro de la función.
+  const r = await as(secre, `select * from public.staff_agenda($1, null, null)`, [d2])
+  assert(r.rows.length === 0, 'Devolvió la agenda de un médico ajeno')
+})
+
+await check('Puede confirmar una cita de su médico', async () => {
+  const cita = await sys(
+    `insert into public.appointments
+       (patient_id, doctor_id, consulting_room_id, starts_at, ends_at, status)
+     values ($1, $2, $3, '2026-10-05 17:00+00', '2026-10-05 17:30+00', 'pending') returning id`,
+    [pA, d1, room1])
+  await as(secre, `update public.appointments set status = 'confirmed' where id = $1`,
+    [cita.rows[0].id])
+  const r = await sys(`select status from public.appointments where id = $1`, [cita.rows[0].id])
+  assert(r.rows[0].status === 'confirmed', `Quedó en ${r.rows[0].status}`)
+})
+
+await check('Puede capturar un gasto pero NO ver los totales', async () => {
+  await as(secre,
+    `insert into public.expenses (concept, amount_cents, doctor_id)
+     values ('Papelería', 45000, $1)`, [d1])
+
+  const lectura = await as(secre, `select id from public.expenses`)
+  assert(lectura.rows.length === 0, `Lee ${lectura.rows.length} gastos`)
+
+  const resumen = await as(secre, `select count(*)::int as n from public.expense_summary(null, null)`)
+  assert(resumen.rows[0].n === 0, 'Ve el resumen de gastos por médico')
+})
+
+await check('Al desactivar la asignación pierde el acceso', async () => {
+  await sys(`update public.staff_assignments set is_active = false where staff_user_id = $1`, [secre])
+  const r = await as(secre, `select id from public.appointments where doctor_id = $1`, [d1])
+  assert(r.rows.length === 0, 'Sigue viendo la agenda tras desactivarla')
+  await sys(`update public.staff_assignments set is_active = true where staff_user_id = $1`, [secre])
+})
+
+await check('Sin permiso de gastos, no puede capturarlos', async () => {
+  await sys(
+    `update public.staff_assignments set can_register_expenses = false where staff_user_id = $1`,
+    [secre])
+  await expectRejected(
+    as(secre,
+      `insert into public.expenses (concept, amount_cents, doctor_id) values ('Otro', 100, $1)`,
+      [d1]),
+    'row-level security'
+  )
+})
+
 // ============================================================= AUDITORÍA ====
 console.log('\nAuditoría y catálogos')
 
