@@ -30,6 +30,7 @@ import {
   type DoctorForReview,
 } from "@/services/admin";
 import { isAdmin, useAuth } from "@/store/auth";
+import { ExpensesPanel } from "@/components/expenses-panel";
 
 export const Route = createFileRoute("/panel/admin")({
   head: () => ({ meta: [{ title: "Administración · DoctorCita" }] }),
@@ -161,6 +162,8 @@ function AdminPanel() {
           )}
         </TabsContent>
       </Tabs>
+
+      {user && <ExpensesPanel userId={user.id} />}
 
       <div className="mt-8 grid gap-4 md:grid-cols-2">
         <ComingSoon title="Gestión de usuarios y catálogos" phase="Fase 7 ampliada" />

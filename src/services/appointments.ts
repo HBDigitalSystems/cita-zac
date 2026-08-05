@@ -199,6 +199,7 @@ export async function getDoctorAppointments(doctorId: string) {
       `id, reference, starts_at, ends_at, status, modality, reason, price_cents, is_first_visit,
        patients ( id, birth_date, gender, blood_type, allergies, chronic_conditions,
                   emergency_contact_name, emergency_contact_phone,
+                  emergency_contact_relationship,
                   users ( full_name, email, phone ) ),
        consulting_rooms ( name )`,
     )

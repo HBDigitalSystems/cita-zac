@@ -33,7 +33,18 @@ if (!password) {
 }
 
 const PROJECT_REF = "pcbajtjfxpabkkufxjzj";
-const url = `postgresql://postgres:${encodeURIComponent(password)}@db.${PROJECT_REF}.supabase.co:5432/postgres`;
+
+// Se conecta por el POOLER y no por `db.<ref>.supabase.co`.
+//
+// El host directo solo publica registro AAAA, es decir, solo existe en IPv6.
+// En una red sin IPv6 —que es la mayoría de las domésticas en México— no hay
+// forma de llegar, y el fallo se presenta como "Connection closed" sin decir
+// por qué. El pooler sí tiene IPv4.
+//
+// Puerto 5432 (modo sesión) y no 6543 (transacción): el modo transacción no
+// admite sentencias preparadas, que es lo que usan estos scripts y `db push`.
+const POOLER_HOST = "aws-1-us-west-2.pooler.supabase.com";
+const url = `postgresql://postgres.${PROJECT_REF}:${encodeURIComponent(password)}@${POOLER_HOST}:5432/postgres`;
 
 const ruta = resolve(join(HERE, archivo));
 const sql = await readFile(ruta, "utf8");

@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   CalendarDays,
   Check,
+  FolderOpen,
   Loader2,
   Mail,
   Phone,
@@ -14,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PatientRecord } from "@/components/patient-record";
 import { cn } from "@/lib/utils";
 import { formatPrice } from "@/lib/doctor-format";
 import {
@@ -51,9 +53,11 @@ function edad(fecha: string | null): number | null {
   return años;
 }
 
-export function DoctorAgenda({ doctorId }: { doctorId: string }) {
+export function DoctorAgenda({ doctorId, userId }: { doctorId: string; userId: string }) {
   const queryClient = useQueryClient();
   const [trabajando, setTrabajando] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [expediente, setExpediente] = useState<any | null>(null);
 
   const citas = useQuery({
     queryKey: ["doctor-appointments", doctorId],
@@ -142,6 +146,7 @@ export function DoctorAgenda({ doctorId }: { doctorId: string }) {
                 onCancelar={() =>
                   accion(cita.id, () => cancelAppointment(cita.id, "doctor"), "Cita cancelada.")
                 }
+                onAbrirExpediente={() => setExpediente(cita)}
               />
             ))}
           </div>
@@ -155,10 +160,40 @@ export function DoctorAgenda({ doctorId }: { doctorId: string }) {
           </h2>
           <div className="space-y-4">
             {pasadas.map((cita) => (
-              <CitaCard key={cita.id} cita={cita} trabajando={false} />
+              <CitaCard
+                key={cita.id}
+                cita={cita}
+                trabajando={false}
+                onAbrirExpediente={() => setExpediente(cita)}
+              />
             ))}
           </div>
         </section>
+      )}
+
+      {expediente?.patients && (
+        <PatientRecord
+          // Monta un expediente limpio por paciente: sin esto, el formulario de
+          // nota conservaría lo escrito para el paciente anterior.
+          key={expediente.patients.id}
+          abierto
+          onCerrar={() => setExpediente(null)}
+          doctorId={doctorId}
+          userId={userId}
+          appointmentId={expediente.id}
+          paciente={{
+            id: expediente.patients.id,
+            nombre: expediente.patients.users?.full_name ?? "Paciente",
+            edad: edad(expediente.patients.birth_date ?? null),
+            tipo_sangre: expediente.patients.blood_type ?? null,
+            telefono: expediente.patients.users?.phone ?? null,
+            alergias: expediente.patients.allergies ?? [],
+            cronicos: expediente.patients.chronic_conditions ?? [],
+            contacto_emergencia: expediente.patients.emergency_contact_name ?? null,
+            telefono_emergencia: expediente.patients.emergency_contact_phone ?? null,
+            parentesco_emergencia: expediente.patients.emergency_contact_relationship ?? null,
+          }}
+        />
       )}
     </div>
   );
@@ -170,6 +205,7 @@ function CitaCard({
   onConfirmar,
   onAtendida,
   onCancelar,
+  onAbrirExpediente,
 }: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   cita: any;
@@ -177,6 +213,7 @@ function CitaCard({
   onConfirmar?: () => void;
   onAtendida?: () => void;
   onCancelar?: () => void;
+  onAbrirExpediente?: () => void;
 }) {
   const inicio = new Date(cita.starts_at);
   const estado = STATUS[cita.status as Enums<"appointment_status">];
@@ -188,12 +225,22 @@ function CitaCard({
   return (
     <article className="rounded-2xl border border-border bg-card p-5">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
+        {/* Todo el bloque del paciente es el botón que abre su expediente: es
+            el destino natural al pulsar sobre alguien de la agenda, y un
+            enlace pequeño al lado se pasaría por alto. */}
+        <button
+          type="button"
+          onClick={onAbrirExpediente}
+          disabled={!onAbrirExpediente}
+          className="group flex items-start gap-3 rounded-lg text-left
+                     focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+                     disabled:cursor-default"
+        >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft text-primary">
             <User className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-base font-semibold text-secondary">
+            <h3 className="text-base font-semibold text-secondary group-hover:text-primary group-disabled:group-hover:text-secondary">
               {paciente?.users?.full_name ?? "Paciente"}
             </h3>
             <p className="text-sm text-muted-foreground">
@@ -201,8 +248,14 @@ function CitaCard({
               {paciente?.blood_type && ` · ${paciente.blood_type}`}
               {cita.is_first_visit && " · Primera visita"}
             </p>
+            {onAbrirExpediente && (
+              <span className="mt-0.5 inline-flex items-center gap-1 text-xs text-primary opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                <FolderOpen className="h-3 w-3" />
+                Ver expediente
+              </span>
+            )}
           </div>
-        </div>
+        </button>
 
         <div className="flex flex-col items-end gap-1">
           <Badge variant="secondary" className={estado.className}>

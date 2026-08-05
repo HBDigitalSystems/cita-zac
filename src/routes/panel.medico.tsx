@@ -257,7 +257,7 @@ function DoctorPanel() {
 
       {doctor && (
         <div className="mt-8">
-          <DoctorAgenda doctorId={doctor.id} />
+          <DoctorAgenda doctorId={doctor.id} userId={user!.id} />
         </div>
       )}
 

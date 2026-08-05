@@ -38,6 +38,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/store/auth";
 import { DoctorReviews } from "@/components/doctor-reviews";
 import { MessageDoctorButton } from "@/components/message-doctor-button";
+import { SocialLinks } from "@/components/social-links";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { cn } from "@/lib/utils";
@@ -653,6 +654,12 @@ function DoctorProfile() {
                       protege el RLS en vez de en un teléfono personal. */}
                   <MessageDoctorButton doctorId={doctor.id} />
                 </div>
+
+                <SocialLinks
+                  facebookUrl={doctor.profile.facebook_url}
+                  instagramUrl={doctor.profile.instagram_url}
+                  nombre={name}
+                />
 
                 {doctor.profile.cancellation_policy && (
                   <p className="mt-4 text-xs leading-relaxed text-muted-foreground">

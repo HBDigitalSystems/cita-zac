@@ -974,6 +974,100 @@ export type Database = {
           }
         ]
       }
+      expense_categories: {
+        Row: {
+          id: string
+          name: string
+          slug: string | null
+          description: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug?: string | null
+          description?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string | null
+          description?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      expenses: {
+        Row: {
+          id: string
+          category_id: string | null
+          doctor_id: string | null
+          concept: string
+          amount_cents: number
+          currency: string
+          incurred_on: string
+          notes: string | null
+          receipt_path: string | null
+          created_by: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          category_id?: string | null
+          doctor_id?: string | null
+          concept: string
+          amount_cents: number
+          currency?: string
+          incurred_on?: string
+          notes?: string | null
+          receipt_path?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          category_id?: string | null
+          doctor_id?: string | null
+          concept?: string
+          amount_cents?: number
+          currency?: string
+          incurred_on?: string
+          notes?: string | null
+          receipt_path?: string | null
+          created_by?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_category_id_fkey"
+            columns: ["category_id"]
+            referencedRelation: "expense_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_created_by_fkey"
+            columns: ["created_by"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_doctor_id_fkey"
+            columns: ["doctor_id"]
+            referencedRelation: "doctors"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       facilities: {
         Row: {
           id: string
@@ -2283,6 +2377,18 @@ export type Database = {
           [_ in never]: never
         }
         Returns: string
+      }
+      expense_summary: {
+        Args: {
+          p_desde?: string
+          p_hasta?: string
+        }
+        Returns: {
+        doctor_id: string
+        doctor_nombre: string
+        total_cents: number
+        movimientos: number
+      }[]
       }
       format_appointment_when: {
         Args: {

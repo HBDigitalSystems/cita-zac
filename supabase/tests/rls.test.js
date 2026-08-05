@@ -698,6 +698,145 @@ await check('open_conversation devuelve el hilo existente en vez de duplicarlo',
   assert(segunda.rows[0].id === conv2, 'La segunda llamada no fue idempotente')
 })
 
+// ================================================================= GASTOS ===
+console.log('\nControl de gastos')
+
+const catRenta = (await sys(
+  `select id from public.expense_categories where slug = 'renta'`)).rows[0]?.id
+
+await check('Los conceptos iniciales se sembraron con su slug', async () => {
+  const r = await sys(`select count(*)::int as n from public.expense_categories where slug is not null`)
+  assert(r.rows[0].n >= 10, `Solo hay ${r.rows[0].n} conceptos con slug`)
+  assert(catRenta, 'No se generó el slug "renta"')
+})
+
+await check('El slug se calcula del nombre y no colisiona', async () => {
+  await sys(`insert into public.expense_categories (name) values ('Insumos médicos X')`)
+  await sys(`insert into public.expense_categories (name) values ('Insumos medicos X')`)
+  const r = await sys(
+    `select slug from public.expense_categories where name like 'Insumos m%dicos X' order by slug`)
+  assert(r.rows.length === 2, `Se esperaban 2 filas y hay ${r.rows.length}`)
+  assert(r.rows[0].slug !== r.rows[1].slug, 'Los dos conceptos comparten slug')
+})
+
+await sys(
+  `insert into public.expenses (category_id, doctor_id, concept, amount_cents, incurred_on)
+   values ($1, $2, 'Material de curación', 150000, '2026-08-01'),
+          ($1, null, 'Renta del local', 2500000, '2026-08-01')`, [catRenta, d1])
+
+await check('Un gasto sin médico es de la clínica, no un dato faltante', async () => {
+  const r = await sys(
+    `select doctor_nombre, total_cents from public.expense_summary(null, null)
+      where doctor_id is null`)
+  assert(r.rows.length === 1, 'No aparece el gasto general')
+  assert(
+    r.rows[0].doctor_nombre.includes('clínica'),
+    `Se etiquetó como ${JSON.stringify(r.rows[0].doctor_nombre)}`
+  )
+})
+
+await check('El resumen agrupa por médico y suma en centavos', async () => {
+  const r = await sys(`select doctor_id, total_cents from public.expense_summary(null, null)`)
+  const delMedico = r.rows.find((x) => x.doctor_id === d1)
+  assert(delMedico, 'No aparece el gasto del médico')
+  assert(Number(delMedico.total_cents) === 150000, `total = ${delMedico.total_cents}`)
+})
+
+await check('El filtro por fechas descarta lo que queda fuera', async () => {
+  const r = await sys(`select count(*)::int as n from public.expense_summary('2026-09-01', null)`)
+  assert(r.rows[0].n === 0, `Devolvió ${r.rows[0].n} grupos fuera del rango`)
+})
+
+await check('Un médico NO ve los gastos de la clínica', async () => {
+  const r = await as(medico1, `select id from public.expenses`)
+  assert(r.rows.length === 0, `Un médico lee ${r.rows.length} gastos`)
+})
+
+await check('Un médico NO ve ni los gastos que llevan su nombre', async () => {
+  // Es información laboral: cuánto le cuesta a la clínica. Si algún día debe
+  // verlos, será una policy nueva y una decisión de negocio.
+  const r = await as(medico1, `select id from public.expenses where doctor_id = $1`, [d1])
+  assert(r.rows.length === 0, 'El médico ve lo que la clínica gasta en él')
+})
+
+await check('Un paciente NO puede registrar gastos', async () => {
+  await expectRejected(
+    as(pacienteA,
+      `insert into public.expenses (concept, amount_cents) values ('Inventado', 100)`),
+    'row-level security'
+  )
+})
+
+await check('El resumen no filtra a quien no puede leer la tabla', async () => {
+  // La función es SECURITY INVOKER: si fuera DEFINER se convertiría en una
+  // puerta trasera que devuelve justo lo que la policy niega.
+  const r = await as(medico1, `select count(*)::int as n from public.expense_summary(null, null)`)
+  assert(r.rows[0].n === 0, `Devolvió ${r.rows[0].n} grupos a un médico`)
+})
+
+await check('El administrador sí gestiona los gastos', async () => {
+  const lectura = await as(admin, `select id from public.expenses`)
+  assert(lectura.rows.length === 2, `El admin lee ${lectura.rows.length} gastos`)
+
+  await as(admin,
+    `insert into public.expenses (concept, amount_cents, doctor_id) values ('Luz', 90000, $1)`,
+    [d1])
+  const resumen = await as(admin,
+    `select total_cents from public.expense_summary(null, null) where doctor_id = $1`, [d1])
+  assert(Number(resumen.rows[0].total_cents) === 240000, `total = ${resumen.rows[0].total_cents}`)
+})
+
+await check('Un importe negativo se rechaza', async () => {
+  await expectRejected(
+    sys(`insert into public.expenses (concept, amount_cents) values ('Error', -500)`),
+    'amount_non_negative'
+  )
+})
+
+// ==================================================== DOCUMENTOS CLÍNICOS ===
+console.log('\nReparto de documentos clínicos')
+
+const docRuta = `${medico1}/estudio-sangre.pdf`
+await sys(
+  `insert into public.documents (patient_id, uploaded_by, doctor_id, title, storage_path, document_type)
+   values ($1, $2, $3, 'Biometría hemática', $4, 'lab_result')`,
+  [pA, medico1, d1, docRuta])
+
+await check('El paciente ve el estudio que le subió su médico', async () => {
+  const r = await as(pacienteA, `select title from public.documents where storage_path = $1`, [docRuta])
+  assert(r.rows.length === 1, 'El paciente no ve su propio estudio')
+})
+
+await check('Un paciente ajeno NO ve el estudio', async () => {
+  const r = await as(pacienteB, `select id from public.documents where storage_path = $1`, [docRuta])
+  assert(r.rows.length === 0, 'Un paciente ajeno lee el estudio')
+})
+
+await check('Un médico sin cita con el paciente NO ve el estudio', async () => {
+  const r = await as(medico2, `select id from public.documents where storage_path = $1`, [docRuta])
+  assert(r.rows.length === 0, 'Un médico sin relación lee el estudio')
+})
+
+await check('Al ocultarlo, el paciente deja de verlo', async () => {
+  await sys(`update public.documents set is_visible_to_patient = false where storage_path = $1`, [docRuta])
+  const r = await as(pacienteA, `select id from public.documents where storage_path = $1`, [docRuta])
+  assert(r.rows.length === 0, 'Sigue visible tras ocultarlo')
+  await sys(`update public.documents set is_visible_to_patient = true where storage_path = $1`, [docRuta])
+})
+
+await check('Un médico solo lee SUS notas, no las de otro médico', async () => {
+  // Un cardiólogo no tiene por qué leer lo que escribió el psiquiatra, aunque
+  // ambos atiendan a la misma persona.
+  await sys(
+    `insert into public.medical_records (patient_id, doctor_id, diagnosis)
+     values ($1, $2, 'Nota del segundo médico')`, [pA, d2])
+  const r = await as(medico1, `select diagnosis from public.medical_records where patient_id = $1`, [pA])
+  assert(
+    !r.rows.some((x) => x.diagnosis === 'Nota del segundo médico'),
+    'Un médico lee la nota clínica de otro'
+  )
+})
+
 // ============================================================= AUDITORÍA ====
 console.log('\nAuditoría y catálogos')
 
