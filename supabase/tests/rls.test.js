@@ -853,6 +853,23 @@ await check('audit_logs solo lo leen los administradores', async () => {
   assert(paciente.rows[0].n === 0, 'FUGA: un paciente leyó la bitácora')
 })
 
+await check('Están los 58 municipios de Zacatecas', async () => {
+  // La plataforma se anuncia como estatal: si falta un municipio, un médico de
+  // ahí no puede terminar el alta de su consultorio.
+  const r = await sys(`select count(*)::int as n from public.municipalities`)
+  assert(r.rows[0].n === 58, `Hay ${r.rows[0].n} municipios y deberían ser 58`)
+})
+
+await check('Ningún municipio comparte slug ni nombre', async () => {
+  const r = await sys(`
+    select count(*)::int as n from (
+      select slug from public.municipalities group by slug having count(*) > 1
+      union all
+      select lower(name) from public.municipalities group by lower(name) having count(*) > 1
+    ) d`)
+  assert(r.rows[0].n === 0, `${r.rows[0].n} municipios duplicados`)
+})
+
 await check('Un anónimo lee los catálogos públicos', async () => {
   const r = await asAnon(`select count(*)::int as n from public.specialties`)
   assert(r.rows[0].n === 45, `Especialidades visibles: ${r.rows[0].n}`)
